@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CircleBeatingWithTextInCenterView">
+        <attr name="showText" format="boolean"/>
+        <attr name="strokeWidthForArc" format="float"/>
+        <attr name="circleColor" format="color"/>
+        <attr name="textSize" format="float"/>
+        <attr name="textColor" format="color"/>
+
+    </declare-styleable>
+
+
+
+</resources>
