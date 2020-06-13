@@ -159,6 +159,8 @@ public class CircleBeatingWithTextInCenterView extends View {
 
     }
 
+
+
     @Override
     protected void onVisibilityChanged(@NonNull View changedView, int visibility) {
         super.onVisibilityChanged(changedView, visibility);
@@ -187,6 +189,11 @@ public class CircleBeatingWithTextInCenterView extends View {
         }
     }
 
+
+    public void stopAnimation(){
+        if(isAnimationRunning)
+        scaleUpAndDown.cancel();
+    }
 
     public synchronized void setText(String text) {
         textForDrawText = text;
