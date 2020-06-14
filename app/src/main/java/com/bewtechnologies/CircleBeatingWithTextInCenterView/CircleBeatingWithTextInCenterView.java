@@ -1,5 +1,6 @@
 package com.bewtechnologies.CircleBeatingWithTextInCenterView;
 
+import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.content.Context;
@@ -10,12 +11,16 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+
 public class CircleBeatingWithTextInCenterView extends View {
+
+
     private RectF mArcRect;
     private Rect mTextRect= new Rect();
     private Paint mArcPaint,mProgressPaint;
@@ -36,6 +41,11 @@ public class CircleBeatingWithTextInCenterView extends View {
     private float textSize=54;
     private int colorForText=Color.RED;
     private long timeForOneBeat = 500;
+
+    Canvas mCanvas;
+    private int xPos,yPos;
+
+    int isStartOrStop=1;  //0 for stop, 1 for start.
 
     public CircleBeatingWithTextInCenterView(Context context) {
         super(context);
@@ -86,17 +96,14 @@ public class CircleBeatingWithTextInCenterView extends View {
                 R.styleable.CircleBeatingWithTextInCenterView,
                 0, 0);
 
-//        if(a!=null)
-        {
-            try {
-                isShowText = a.getBoolean(R.styleable.CircleBeatingWithTextInCenterView_showText, false);
-                strokeWidthForArc = a.getFloat(R.styleable.CircleBeatingWithTextInCenterView_strokeWidthForArc, 2);
-                textSize = a.getFloat(R.styleable.CircleBeatingWithTextInCenterView_textSize, 54);
-                colorForArc=  a.getColor(R.styleable.CircleBeatingWithTextInCenterView_circleColor,Color.BLUE);
-                colorForText=  a.getColor(R.styleable.CircleBeatingWithTextInCenterView_textColor,Color.BLUE);
-            } finally {
-                a.recycle();
-            }
+        try {
+            isShowText = a.getBoolean(R.styleable.CircleBeatingWithTextInCenterView_showText, false);
+            strokeWidthForArc = a.getFloat(R.styleable.CircleBeatingWithTextInCenterView_strokeWidthForArc, 2);
+            textSize = a.getFloat(R.styleable.CircleBeatingWithTextInCenterView_textSize, 54);
+            colorForArc=  a.getColor(R.styleable.CircleBeatingWithTextInCenterView_circleColor,Color.BLUE);
+            colorForText=  a.getColor(R.styleable.CircleBeatingWithTextInCenterView_textColor,Color.BLUE);
+        } finally {
+            a.recycle();
         }
 
 
@@ -118,20 +125,60 @@ public class CircleBeatingWithTextInCenterView extends View {
 
     }
 
-    private void startAnimation() {
+    private void startOrStopAnimation() {
+
+        Log.i("isAnimation startostop ", "started isStartOrStop "+isStartOrStop);
+
+        if(isStartOrStop==1)
+        {
+            isAnimationRunning=true;
+            scaleUpAndDown = ObjectAnimator.ofPropertyValuesHolder(
+                    this,
+                    PropertyValuesHolder.ofFloat("scaleX", 1.2f),
+                    PropertyValuesHolder.ofFloat("scaleY", 1.2f));
+            scaleUpAndDown.setDuration(timeForOneBeat);
+            scaleUpAndDown.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {
+                    Log.i("isAnimation repeating ", "started isStartOrStop "+isStartOrStop);
+                    if(isStartOrStop==0)
+                    {
+                        animator.cancel();
+                    }
+
+                }
+            });
+            scaleUpAndDown.setRepeatCount(ObjectAnimator.INFINITE);
+            scaleUpAndDown.setRepeatMode(ObjectAnimator.REVERSE);
 
 
-        isAnimationRunning=true;
-        scaleUpAndDown = ObjectAnimator.ofPropertyValuesHolder(
-                this,
-                PropertyValuesHolder.ofFloat("scaleX", 1.2f),
-                PropertyValuesHolder.ofFloat("scaleY", 1.2f));
-        scaleUpAndDown.setDuration(timeForOneBeat);
 
-        scaleUpAndDown.setRepeatCount(ObjectAnimator.INFINITE);
-        scaleUpAndDown.setRepeatMode(ObjectAnimator.REVERSE);
+            scaleUpAndDown.start();
+        }
+        else
+        {
+            if(scaleUpAndDown!=null && scaleUpAndDown.isRunning())
+            {
+                scaleUpAndDown.cancel();
+            }
+        }
 
-        scaleUpAndDown.start();
+
 
 
     }
@@ -140,25 +187,28 @@ public class CircleBeatingWithTextInCenterView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        mCanvas=canvas;
         mTextPaint.getTextBounds(textForDrawText, 0, textForDrawText.length(), mTextRect);
 
-        int xPos =(int) (mArcRect.centerX() - mTextRect.width() / 2);
-        int yPos =(int)( mArcRect.centerY() - (mTextPaint.ascent()+mTextPaint.descent())/2);
+        xPos =(int) (mArcRect.centerX() - mTextRect.width() / 2);
+        yPos =(int)( mArcRect.centerY() - (mTextPaint.ascent()+mTextPaint.descent())/2);
 
         // draw the arc
         canvas.drawArc(mArcRect, -90, 360, false, mArcPaint);
+
         if(isShowText)
         {
             canvas.drawText(textForDrawText,xPos,yPos,mTextPaint);
         }
 
+        Log.i("isAnimation ondraw ", "started isStartOrStop "+isStartOrStop);
+
         //uncomment below
-        startAnimation();
+        startOrStopAnimation();
 
 
 
     }
-
 
 
     @Override
@@ -172,7 +222,7 @@ public class CircleBeatingWithTextInCenterView extends View {
                 case VISIBLE:
                     if(!isAnimationRunning)
                         scaleUpAndDown.cancel();
-                    startAnimation();
+                        startOrStopAnimation();
                     break;
                 case INVISIBLE:
                     if(isAnimationRunning)
@@ -190,12 +240,24 @@ public class CircleBeatingWithTextInCenterView extends View {
     }
 
 
-    public void stopAnimation(){
-        if(isAnimationRunning)
-        scaleUpAndDown.cancel();
-    }
+    public synchronized void stopAnimation(){
+        Log.i("isAnimation sdfd ", " "+scaleUpAndDown.isRunning());
+//        if(scaleUpAndDown.isRunning())
+        {
+            //clearAnimation();
 
+            scaleUpAndDown.cancel();
+            Log.i("isAnimation sdfd 2 ", " "+scaleUpAndDown.isRunning());
+
+            isStartOrStop=0;
+
+
+
+        }
+    }
     public synchronized void setText(String text) {
+        Log.i("isAnimation settext ", "jhjh");
+
         textForDrawText = text;
         invalidate();
         requestLayout();
